@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef __DATACONTAINERBASE_H
-#define __DATACONTAINERBASE_H
+#include <velodyne_pointcloud/pointcloudXYZIR.h>
 
-#include <ros/ros.h>
+namespace velodyne_pointcloud
+{
+void PointcloudXYZIR::addPoint(
+  const float & x, const float & y, const float & z, const uint16_t & ring,
+  const uint16_t & azimuth, const float & distance, const float & intensity,
+  const double & time_stamp)
+{
+  velodyne_pointcloud::PointXYZIR point;
+  point.x = x;
+  point.y = y;
+  point.z = z;
+  point.intensity = intensity;
+  point.ring = ring;
 
-namespace velodyne_rawdata
-{
-class DataContainerBase
-{
-public:
-  virtual void addPoint(
-    const float & x, const float & y, const float & z, const uint16_t & ring,
-    const uint16_t & azimuth, const float & distance, const float & intensity,
-    const double & time_stamp) = 0;
-};
-}  // namespace velodyne_rawdata
-#endif  //__DATACONTAINERBASE_H
+  pc->points.push_back(point);
+  ++pc->width;
+}
+}  // namespace velodyne_pointcloud

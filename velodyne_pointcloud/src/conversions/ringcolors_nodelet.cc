@@ -7,8 +7,9 @@
 
 /** @file
 
-    This ROS nodelet transforms raw Velodyne 3D LIDAR packets to a
-    PointCloud2 in the /odom frame.
+    This ROS nodelet converts a Velodyne 3D LIDAR PointXYZIR cloud to
+    PointXYZRGB, assigning colors for visualization of the laser
+    rings.
 
 */
 
@@ -16,25 +17,25 @@
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 
-#include "velodyne_pointcloud/transform.h"
+#include "velodyne_pointcloud/colors.h"
 
 namespace velodyne_pointcloud
 {
-class TransformNodelet : public nodelet::Nodelet
+class RingColorsNodelet : public nodelet::Nodelet
 {
 public:
-  TransformNodelet() {}
-  ~TransformNodelet() {}
+  RingColorsNodelet() {}
+  ~RingColorsNodelet() {}
 
 private:
   virtual void onInit();
-  boost::shared_ptr<Transform> tf_;
+  boost::shared_ptr<RingColors> colors_;
 };
 
 /** @brief Nodelet initialization. */
-void TransformNodelet::onInit()
+void RingColorsNodelet::onInit()
 {
-  tf_.reset(new Transform(getNodeHandle(), getPrivateNodeHandle()));
+  colors_.reset(new RingColors(getNodeHandle(), getPrivateNodeHandle()));
 }
 
 }  // namespace velodyne_pointcloud
@@ -42,4 +43,4 @@ void TransformNodelet::onInit()
 // Register this plugin with pluginlib.  Names must match nodelets.xml.
 //
 // parameters: class type, base class type
-PLUGINLIB_EXPORT_CLASS(velodyne_pointcloud::TransformNodelet, nodelet::Nodelet)
+PLUGINLIB_EXPORT_CLASS(velodyne_pointcloud::RingColorsNodelet, nodelet::Nodelet)

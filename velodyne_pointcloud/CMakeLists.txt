@@ -1,34 +1,32 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(velodyne_pointcloud)
 
-# Set minimum C++ standard to C++11
-if (NOT "${CMAKE_CXX_STANDARD_COMPUTED_DEFAULT}")
-  message(STATUS "Changing CXX_STANDARD from C++98 to C++11")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif ("${CMAKE_CXX_STANDARD_COMPUTED_DEFAULT}" STREQUAL "98")
-  message(STATUS "Changing CXX_STANDARD from C++98 to C++11")
-  set(CMAKE_CXX_STANDARD 11)
-endif()
+add_compile_options(-std=c++14)
+
+set(CMAKE_BUILD_TYPE "Release")
 
 set(${PROJECT_NAME}_CATKIN_DEPS
     angles
     nodelet
+    pcl_ros
     roscpp
     roslib
     sensor_msgs
     tf
+    tf2
+    tf2_ros
+    tf2_geometry_msgs
     velodyne_driver
     velodyne_msgs
     dynamic_reconfigure
-    diagnostic_updater
+    cv_bridge
+    image_transport
 )
 
 find_package(catkin REQUIRED COMPONENTS
-             ${${PROJECT_NAME}_CATKIN_DEPS}
-             roslint)
-
+             ${${PROJECT_NAME}_CATKIN_DEPS} pcl_conversions)
 find_package(Boost COMPONENTS signals)
-find_package(Eigen3 REQUIRED)
+
 # Resolve system dependency on yaml-cpp, which apparently does not
 # provide a CMake find_package() module.
 find_package(PkgConfig REQUIRED)
@@ -39,6 +37,8 @@ find_path(YAML_CPP_INCLUDE_DIR
 find_library(YAML_CPP_LIBRARY
              NAMES YAML_CPP
              PATHS ${YAML_CPP_LIBRARY_DIRS})
+
+find_package(OpenCV REQUIRED)
 
 link_directories(${YAML_CPP_LIBRARY_DIRS})
 
@@ -52,7 +52,7 @@ endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
 include_directories(include ${catkin_INCLUDE_DIRS}
   ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
-  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 catkin_package(
@@ -70,16 +70,19 @@ add_subdirectory(src/conversions)
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
 install(FILES nodelets.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY launch/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
-install(DIRECTORY params/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/params)
+
 install(PROGRAMS scripts/gen_calibration.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-roslint_cpp()
+install(
+  DIRECTORY
+    launch
+    params
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 if (CATKIN_ENABLE_TESTING)
   add_subdirectory(tests)

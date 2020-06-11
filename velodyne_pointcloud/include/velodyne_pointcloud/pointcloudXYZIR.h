@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef __DATACONTAINERBASE_H
-#define __DATACONTAINERBASE_H
+#ifndef __POINTCLOUDXYZIR_H
+#define __POINTCLOUDXYZIR_H
 
-#include <ros/ros.h>
+#include <pcl_ros/point_cloud.h>
+#include <velodyne_pointcloud/datacontainerbase.h>
 
-namespace velodyne_rawdata
+#include <velodyne_pointcloud/point_types.h>
+
+namespace velodyne_pointcloud
 {
-class DataContainerBase
+class PointcloudXYZIR : public velodyne_rawdata::DataContainerBase
 {
 public:
+  pcl::PointCloud<velodyne_pointcloud::PointXYZIR>::Ptr pc;
+
+  PointcloudXYZIR() : pc(new pcl::PointCloud<velodyne_pointcloud::PointXYZIR>) {}
+
   virtual void addPoint(
     const float & x, const float & y, const float & z, const uint16_t & ring,
     const uint16_t & azimuth, const float & distance, const float & intensity,
-    const double & time_stamp) = 0;
+    const double & time_stamp) override;
 };
-}  // namespace velodyne_rawdata
-#endif  //__DATACONTAINERBASE_H
+}  // namespace velodyne_pointcloud
+#endif  //__POINTCLOUDXYZIR_H

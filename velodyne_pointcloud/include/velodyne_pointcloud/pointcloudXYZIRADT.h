@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Tier IV, Inc. All rights reserved.
+ * Copyright 2015-2019 Autoware Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef __DATACONTAINERBASE_H
-#define __DATACONTAINERBASE_H
+#ifndef __POINTCLOUDXYZIRADT_H
+#define __POINTCLOUDXYZIRADT_H
 
-#include <ros/ros.h>
+#include <pcl_ros/point_cloud.h>
+#include <velodyne_pointcloud/datacontainerbase.h>
 
-namespace velodyne_rawdata
+#include <velodyne_pointcloud/point_types.h>
+
+namespace velodyne_pointcloud
 {
-class DataContainerBase
+class PointcloudXYZIRADT : public velodyne_rawdata::DataContainerBase
 {
 public:
+  pcl::PointCloud<velodyne_pointcloud::PointXYZIRADT>::Ptr pc;
+
+  PointcloudXYZIRADT() : pc(new pcl::PointCloud<velodyne_pointcloud::PointXYZIRADT>) {}
+
   virtual void addPoint(
     const float & x, const float & y, const float & z, const uint16_t & ring,
     const uint16_t & azimuth, const float & distance, const float & intensity,
-    const double & time_stamp) = 0;
+    const double & time_stamp) override;
 };
-}  // namespace velodyne_rawdata
-#endif  //__DATACONTAINERBASE_H
+}  // namespace velodyne_pointcloud
+#endif

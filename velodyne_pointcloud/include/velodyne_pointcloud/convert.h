@@ -1,34 +1,12 @@
-// Copyright (C) 2009, 2010, 2011, 2012, 2019 Austin Robot Technology, Jack O'Quin, Jesse Vera, Joshua Whitley
-// All rights reserved.
-//
-// Software License Agreement (BSD License 2.0)
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions
-// are met:
-//
-//  * Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//  * Redistributions in binary form must reproduce the above
-//    copyright notice, this list of conditions and the following
-//    disclaimer in the documentation and/or other materials provided
-//    with the distribution.
-//  * Neither the name of {copyright_holder} nor the names of its
-//    contributors may be used to endorse or promote products derived
-//    from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+/* -*- mode: C++ -*- */
+/*
+ *  Copyright (C) 2009, 2010 Austin Robot Technology, Jack O'Quin
+ *  Copyright (C) 2011 Jesse Vera
+ *  Copyright (C) 2012 Austin Robot Technology, Jack O'Quin
+ *  License: Modified BSD Software License Agreement
+ *
+ *  $Id$
+ */
 
 /** @file
 
@@ -36,67 +14,71 @@
 
 */
 
-#ifndef VELODYNE_POINTCLOUD_CONVERT_H
-#define VELODYNE_POINTCLOUD_CONVERT_H
+#ifndef _VELODYNE_POINTCLOUD_CONVERT_H_
+#define _VELODYNE_POINTCLOUD_CONVERT_H_ 1
 
+#include <deque>
 #include <string>
 
 #include <ros/ros.h>
-#include <diagnostic_updater/diagnostic_updater.h>
-#include <diagnostic_updater/publisher.h>
+
+#include <tf2/convert.h>
+#include <tf2/transform_datatypes.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <sensor_msgs/PointCloud2.h>
-#include <velodyne_pointcloud/rawdata.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <dynamic_reconfigure/server.h>
 #include <velodyne_pointcloud/CloudNodeConfig.h>
+
+#include <velodyne_pointcloud/pointcloudXYZIRADT.h>
+#include <velodyne_pointcloud/rawdata.h>
 
 namespace velodyne_pointcloud
 {
 class Convert
 {
-  public:
-    Convert(
-        ros::NodeHandle node,
-        ros::NodeHandle private_nh,
-        std::string const & node_name = ros::this_node::getName());
-    ~Convert() {}
+public:
+  Convert(ros::NodeHandle node, ros::NodeHandle private_nh);
+  ~Convert() {}
 
-  private:
-    void callback(velodyne_pointcloud::CloudNodeConfig &config, uint32_t level);
-    void processScan(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg);
+private:
+  void callback(velodyne_pointcloud::CloudNodeConfig & config, uint32_t level);
+  void processScan(const velodyne_msgs::VelodyneScan::ConstPtr & scanMsg);
+  visualization_msgs::MarkerArray createVelodyneModelMakerMsg(const std_msgs::Header & header);
+  bool getTransform(
+    const std::string & target_frame, const std::string & source_frame,
+    tf2::Transform * tf2_transform_ptr);
 
-    boost::shared_ptr<dynamic_reconfigure::Server<velodyne_pointcloud::CloudNodeConfig> > srv_;
+  ros::Subscriber velodyne_scan_;
+  ros::Publisher velodyne_points_pub_;
+  ros::Publisher velodyne_points_ex_pub_;
+  ros::Publisher velodyne_points_invalid_near_pub_;
+  ros::Publisher velodyne_points_combined_ex_pub_;
+  ros::Publisher marker_array_pub_;
 
-    boost::shared_ptr<velodyne_rawdata::RawData> data_;
-    ros::Subscriber velodyne_scan_;
-    ros::Publisher output_;
+  tf2_ros::Buffer tf2_buffer_;
+  tf2_ros::TransformListener tf2_listener_;
 
-    boost::shared_ptr<velodyne_rawdata::DataContainerBase> container_ptr_;
+  /// Pointer to dynamic reconfigure service srv_
+  boost::shared_ptr<dynamic_reconfigure::Server<velodyne_pointcloud::CloudNodeConfig> > srv_;
 
-    boost::mutex reconfigure_mtx_;
+  boost::shared_ptr<velodyne_rawdata::RawData> data_;
 
-    /// configuration parameters
-    typedef struct
-    {
-      std::string target_frame;      ///< target frame
-      std::string fixed_frame;       ///< fixed frame
-      bool organize_cloud;           ///< enable/disable organized cloud structure
-      double max_range;              ///< maximum range to publish
-      double min_range;              ///< minimum range to publish
-      uint16_t num_lasers;           ///< number of lasers
-      int npackets;                  ///< number of packets to combine
-    }
-    Config;
-    Config config_;
-    bool first_rcfg_call;
+  int num_points_threshold_;
+  std::vector<float> invalid_intensity_array_;
+  std::string base_link_frame_;
 
-  // diagnostics updater
-  diagnostic_updater::Updater diagnostics_;
-  double diag_min_freq_;
-  double diag_max_freq_;
-  boost::shared_ptr<diagnostic_updater::TopicDiagnostic> diag_topic_;
+  /// configuration parameters
+  typedef struct
+  {
+    int npackets;  ///< number of packets to combine
+  } Config;
+  Config config_;
 };
+
 }  // namespace velodyne_pointcloud
 
-#endif  // VELODYNE_POINTCLOUD_CONVERT_H
+#endif  // _VELODYNE_POINTCLOUD_CONVERT_H_

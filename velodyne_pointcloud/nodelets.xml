@@ -10,6 +10,16 @@
     </class>
   </library>
 
+  <library path="lib/libinterpolate_nodelet">
+    <class name="velodyne_pointcloud/InterpolateNodelet"
+           type="velodyne_pointcloud::InterpolateNodelet"
+           base_class_type="nodelet::Nodelet">
+      <description>
+        Interpolate points using twist info.
+      </description>
+    </class>
+  </library>
+
   <library path="lib/libringcolors_nodelet">
     <class name="velodyne_pointcloud/RingColorsNodelet"
            type="velodyne_pointcloud::RingColorsNodelet"
@@ -26,7 +36,7 @@
            type="velodyne_pointcloud::TransformNodelet"
            base_class_type="nodelet::Nodelet">
       <description>
-        Transforms packets into /map frame, publishing multiple packets
+        Transforms packets into /odom frame, publishing multiple packets
         as PointCloud2.
       </description>
     </class>
